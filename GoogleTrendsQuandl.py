@@ -14,13 +14,14 @@ import datetime
 import pickle
 import quandl
 
-search_term    = 'buy bitcoin'
+search_term = 'buy bitcoin'
 quandl_data_id = 'BCHARTS/COINBASEEUR-Bitcoin-Markets-coinbaseEUR'
+
 
 def cached_fetch_quantl(quandl_id):
     '''Download and cache Quandl data'''
     now = datetime.datetime.now()
-    cache_path = '{}.pkl'.format(quandl_id.replace('/', '-')+'_'+now.strftime("%Y-%m-%d"))
+    cache_path = '{}.pkl'.format(quandl_id.replace('/', '-') + '_' + now.strftime("%Y-%m-%d"))
     try:
         f = open(cache_path, 'rb')
         df = pickle.load(f)
@@ -31,6 +32,7 @@ def cached_fetch_quantl(quandl_id):
         df.to_pickle(cache_path)
         print('Cached {} at {}'.format(quandl_id, cache_path))
     return df
+
 
 google_trends = TrendReq(hl='en-US', tz=360)
 google_trends.build_payload(kw_list=[search_term], timeframe='today 3-m', )
@@ -44,17 +46,25 @@ start = start.date()
 df_price = df_price.loc[start:]
 df_interest = df_interest.loc[start:]
 
-df = pd.concat([df_interest, df_price['Weighted Price']], axis=1)
+df = pd.concat([df_interest, df_price['Weighted Price'], df_price['Volume (BTC)']], axis=1)
 
 '''Plot data'''
 fig, ax1 = plt.subplots()
 ax2 = ax1.twinx()
-interest, = ax1.plot(df.index.to_pydatetime(), df[search_term], '-',
+
+volume = ax2.bar(df.index.to_pydatetime(), df['Volume (BTC)'], 1,
+                 alpha=0.08,
+                 color='red',
+                 label='Volume'
+                 )
+
+interest, = ax1.plot(df.index.to_pydatetime(), df[search_term], '--',
                      color='blue',
                      linewidth=1.0,
                      label='Interest (Google Trends)',
                      )
-price, = ax2.plot(df.index.to_pydatetime(), df['Weighted Price'], '--',
+
+price, = ax2.plot(df.index.to_pydatetime(), df['Weighted Price'], '-',
                   color='red',
                   linewidth=1.0,
                   label='BTC/EUR (Coinbase)'
@@ -62,6 +72,7 @@ price, = ax2.plot(df.index.to_pydatetime(), df['Weighted Price'], '--',
 
 ax1.spines["top"].set_visible(False)
 ax2.spines["top"].set_visible(False)
-plt.legend(handles=[interest, price])
+plt.legend(handles=[interest, price, volume])
 
 plt.show()
+

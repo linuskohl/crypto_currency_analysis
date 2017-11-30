@@ -46,7 +46,7 @@ start = start.date()
 df_price = df_price.loc[start:]
 df_interest = df_interest.loc[start:]
 
-df = pd.concat([df_interest, df_price['Weighted Price'], df_price['Volume (BTC)']], axis=1)
+df = pd.concat([df_interest[search_term], df_price['Weighted Price'], df_price['Volume (BTC)']], axis=1)
 
 '''Plot data'''
 fig, ax1 = plt.subplots()
@@ -74,5 +74,9 @@ ax1.spines["top"].set_visible(False)
 ax2.spines["top"].set_visible(False)
 plt.legend(handles=[interest, price, volume])
 
+print('Correlation')
+print(df.pct_change().corr(method='pearson'))
+
 plt.show()
+
 
